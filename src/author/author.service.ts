@@ -8,11 +8,10 @@ export class AuthorService {
   constructor(private prisma: PrismaService) {}
 
   async create(createAuthorDto: CreateAuthorDto) {
-    const { name, book_id } = createAuthorDto;
+    const { name } = createAuthorDto;
     const author = await this.prisma.author.create({
       data: {
         name,
-        book_id,
       },
     });
     return author;
@@ -35,10 +34,13 @@ export class AuthorService {
   }
 
   async update(id: number, updateAuthorDto: UpdateAuthorDto) {
+    const { name } = updateAuthorDto;
     await this.findOne(id);
     const author = await this.prisma.author.update({
       where: { id },
-      data: updateAuthorDto,
+      data: {
+        name,
+      },
     });
     return author;
   }

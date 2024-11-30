@@ -1,11 +1,13 @@
-import { IsNumber, IsString, Matches } from 'class-validator';
+import { IsArray, IsInt, IsNotEmpty, IsString, Matches } from 'class-validator';
 
 export class CreateBookDto {
   @IsString()
+  @IsNotEmpty()
   title: string;
 
-  @IsNumber()
-  category_id: number;
+  @IsString()
+  @IsNotEmpty()
+  category_name: string;
 
   @IsString()
   @Matches(/^\d{4}-\d{2}-\d{2}$/, {
@@ -13,9 +15,10 @@ export class CreateBookDto {
   })
   publishedAt: string;
 
-  @IsNumber()
+  @IsInt()
   copied_owned: number;
 
-  @IsNumber()
-  author_id: number;
+  @IsArray()
+  @IsString({ each: true })
+  author_list: string[];
 }

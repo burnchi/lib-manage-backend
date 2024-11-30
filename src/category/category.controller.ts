@@ -25,9 +25,13 @@ export class CategoryController {
     return this.categoryService.findAll();
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.categoryService.findOne(+id);
+  // @Get(':id')
+  // async findOne(@Param('id') id: string) {
+  //   return this.categoryService.findOne(+id);
+  // }
+  @Get(':name')
+  async findOneByName(@Param('name') name: string) {
+    return this.categoryService.findByName(name);
   }
 
   @Patch(':id')

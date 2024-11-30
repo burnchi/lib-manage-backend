@@ -33,6 +33,16 @@ export class CategoryService {
     return category;
   }
 
+  async findByName(name: string) {
+    const category = await this.prisma.category.findFirst({
+      where: { name: name },
+    });
+    if (!category) {
+      throw new HttpException('category not found', 400);
+    }
+    return category;
+  }
+
   async update(id: number, updateCategoryDto: UpdateCategoryDto) {
     await this.findOne(id);
     const category = await this.prisma.category.update({

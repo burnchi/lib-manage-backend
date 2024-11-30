@@ -19,18 +19,23 @@ model Book {
   category_id  Int
   publishedAt  String
   copied_owned Int
-  author_id    Int
 }
 
 model Author {
-  id      Int    @id @default(autoincrement())
-  name    String
-  book_id Int
+  id   Int    @id @default(autoincrement())
+  name String @unique
+}
+
+model book_author {
+  book_id   Int
+  author_id Int
+
+  @@id([book_id, author_id])
 }
 
 model Category {
   id   Int    @id @default(autoincrement())
-  name String
+  name String @unique
 }
 
 model Admin {

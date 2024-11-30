@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { BookService } from './book.service';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -23,6 +24,15 @@ export class BookController {
   @Get()
   async findAll() {
     return this.bookService.findAll();
+  }
+
+  @Get()
+  async getBooks(
+    @Query('page') page: number = 1, // 当前页，默认第 1 页
+    @Query('pageSize') pageSize: number = 10, // 每页条数，默认 10 条
+    @Query('search') search?: string, // 搜索关键字（可选）
+  ) {
+    return this.bookService.getBooks(page, pageSize, search);
   }
 
   @Get(':id')
