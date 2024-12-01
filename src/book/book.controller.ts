@@ -21,18 +21,18 @@ export class BookController {
     return this.bookService.create(createBookDto);
   }
 
-  @Get()
-  async findAll() {
-    return this.bookService.findAll();
-  }
+  // @Get()
+  // async findAll() {
+  //   return this.bookService.findAll();
+  // }
 
   @Get()
   async getBooks(
     @Query('page') page: number = 1, // 当前页，默认第 1 页
-    @Query('pageSize') pageSize: number = 10, // 每页条数，默认 10 条
+    @Query('pageSize') pageSize: number = 6, // 每页条数，默认 10 条
     @Query('search') search?: string, // 搜索关键字（可选）
   ) {
-    return this.bookService.getBooks(page, pageSize, search);
+    return this.bookService.getBooks(+page, +pageSize, search);
   }
 
   @Get(':id')

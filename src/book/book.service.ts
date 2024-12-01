@@ -106,6 +106,69 @@ export class BookService {
     return booksWithAuthors;
   }
 
+  async getBooks(page: number, pageSize: number, search?: string) {
+    // 计算分页的起始位置
+    const skip = (page - 1) * pageSize;
+    // console.log(typeof page);
+    // console.log(typeof pageSize);
+
+    // 搜索条件
+    const where = search
+      ? {
+          OR: [
+            { title: { contains: search } }, // 搜索书名（大小写不敏感）
+            // { category: { name: { contains: search, mode: 'insensitive' } } }, // 搜索分类名
+          ],
+        }
+      : {};
+
+    // 查询当前页的数据
+    const books = await this.prisma.book.findMany({
+      skip,
+      take: pageSize,
+      orderBy: {
+        uploadedAt: 'desc',
+      },
+      where,
+    });
+
+    // 查询符合条件的总记录数
+    const totalCount = await this.prisma.book.count({ where });
+
+    // 在组合表中，获取每本书的作者信息
+    const booksWithAuthors = await Promise.all(
+      books.map(async (book) => {
+        const authors = await this.prisma.$queryRaw`
+          SELECT a.*
+          FROM author a
+          JOIN book_author ba ON a.id = ba.author_id
+          WHERE ba.book_id = ${book.id}
+        `;
+
+        // 获取书籍对应的分类名称
+        const category = await this.prisma.category.findUnique({
+          where: { id: book.category_id },
+        });
+
+        // 去掉 category_id 字段
+        const { category_id, ...rest } = book;
+        return {
+          ...rest,
+          category,
+          authors, // 添加作者信息
+        };
+      }),
+    );
+
+    // 最终返回的数据
+    return {
+      books: booksWithAuthors,
+      totalCount,
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / pageSize),
+    };
+  }
+
   // -------------------------------------- 查询一本书籍
   async findOne(id: number) {
     // TODO: 优化查询效率 这里查询了两次数据库,可以简化为一次查询
