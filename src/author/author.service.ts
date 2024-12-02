@@ -19,7 +19,24 @@ export class AuthorService {
 
   async findAll() {
     const authors = await this.prisma.author.findMany();
-    return authors;
+    const booksAuthors = await this.prisma.book_author.findMany();
+
+    const result = authors
+      .map((author) => {
+        const booksCount = booksAuthors.filter(
+          (bookAuthor) => bookAuthor.author_id === author.id,
+        ).length;
+        if (booksCount === 0) {
+          return null;
+        }
+
+        return {
+          author_name: author.name,
+          book_count: booksCount,
+        };
+      })
+      .filter((item) => item !== null);
+    return result;
   }
 
   async findOne(id: number) {

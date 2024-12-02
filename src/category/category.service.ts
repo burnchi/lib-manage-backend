@@ -18,8 +18,28 @@ export class CategoryService {
   }
 
   async findAll() {
-    const categorys = await this.prisma.category.findMany();
-    return categorys;
+    const categories = await this.prisma.category.findMany();
+    const books = await this.prisma.book.findMany();
+    // 手动统计每个分类的书籍数量
+    const result = categories
+      .map((category) => {
+        const bookCount = books.filter(
+          (book) => book.category_id === category.id,
+        ).length;
+
+        // 若分类下无书籍，则不返回该分类
+        if (bookCount === 0) {
+          return null;
+        }
+        return {
+          category_id: category.id,
+          category_name: category.name,
+          book_count: bookCount,
+        };
+      })
+      // 过滤掉 undefined
+      .filter((item) => item !== null);
+    return result;
   }
 
   async findOne(id: number) {
