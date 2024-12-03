@@ -106,34 +106,107 @@ export class BookService {
     return booksWithAuthors;
   }
 
-  async getBooks(page: number, pageSize: number, search?: string) {
+  async getBooks(
+    page: number,
+    pageSize: number,
+    search?: string,
+    author?: string,
+    category?: string,
+  ) {
     // 计算分页的起始位置
     const skip = (page - 1) * pageSize;
     // console.log(typeof page);
     // console.log(typeof pageSize);
 
-    // 搜索条件
-    const where = search
-      ? {
-          OR: [
-            { title: { contains: search } }, // 搜索书名（大小写不敏感）
-            // { category: { name: { contains: search, mode: 'insensitive' } } }, // 搜索分类名
-          ],
-        }
-      : {};
-
     // 查询当前页的数据
-    const books = await this.prisma.book.findMany({
-      skip,
-      take: pageSize,
-      orderBy: {
-        uploadedAt: 'desc',
-      },
-      where,
-    });
+    let books = [];
+    let totalCount = 0;
 
-    // 查询符合条件的总记录数
-    const totalCount = await this.prisma.book.count({ where });
+    // 如果没有任何条件，则查询所有书籍
+    if (!search && !author && !category) {
+      books = await this.prisma.book.findMany({
+        take: pageSize,
+        skip,
+      });
+      // TODO:查询符合条件的总记录数
+      totalCount = await this.prisma.book.count();
+    }
+
+    // 如果有搜索条件，则查询搜索条件对应的书籍
+    if (search && search.length > 0) {
+      books = await this.prisma.book.findMany({
+        take: pageSize,
+        skip,
+        where: {
+          OR: [{ title: { contains: search } }],
+        },
+      });
+      // TODO:查询符合条件的总记录数
+      totalCount = await this.prisma.book.count({
+        where: {
+          OR: [{ title: { contains: search } }],
+        },
+      });
+    }
+
+    // 如果有作者条件，则查询作者对应的书籍
+    if (author && author.length > 0) {
+      // author = "张三"
+      const author_id = await this.prisma.$queryRaw`
+        SELECT id
+        FROM author
+        WHERE name = ${author}
+      `;
+      // console.log(author_ids);
+      // console.log(author_ids[0].id);
+
+      const book_ids: any = await this.prisma.$queryRaw`
+        SELECT book_id
+        FROM book_author
+        WHERE author_id = ${author_id[0].id}
+      `;
+      // console.log(book_ids);
+
+      // book_id可能会没有，所以需要判断一下
+      if (book_ids.length > 0) {
+        const ids = book_ids?.map((item: any) => item.book_id);
+
+        books = await this.prisma.book.findMany({
+          take: pageSize,
+          skip,
+          where: {
+            id: { in: ids },
+          },
+        });
+
+        // TODO:可能上架的书已被删除，可能出现bug
+        totalCount = ids.length;
+      }
+      // console.log(books);
+    }
+
+    // 如果有分类条件，则查询分类对应的书籍
+    if (category && category.length > 0) {
+      // category = "计算机"
+      const category_id = await this.prisma.category.findUnique({
+        where: { name: category },
+      });
+
+      if (category_id) {
+        books = await this.prisma.book.findMany({
+          take: pageSize,
+          skip,
+          where: {
+            category_id: category_id.id,
+          },
+        });
+        totalCount = await this.prisma.book.count({
+          where: {
+            category_id: category_id.id,
+          },
+        });
+      }
+    }
 
     // 在组合表中，获取每本书的作者信息
     const booksWithAuthors = await Promise.all(

@@ -31,8 +31,16 @@ export class BookController {
     @Query('page') page: number = 1, // 当前页，默认第 1 页
     @Query('pageSize') pageSize: number = 6, // 每页条数，默认 10 条
     @Query('search') search?: string, // 搜索关键字（可选）
+    @Query('author') author?: string, // 作者（可选）
+    @Query('category') category?: string, // 分类（可选）
   ) {
-    return this.bookService.getBooks(+page, +pageSize, search);
+    return this.bookService.getBooks(
+      +page,
+      +pageSize,
+      search,
+      author,
+      category,
+    );
   }
 
   @Get(':id')
