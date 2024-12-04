@@ -31,7 +31,7 @@ export class AuthorService {
         }
 
         return {
-          author_name: author.name,
+          name: author.name,
           book_count: booksCount,
         };
       })

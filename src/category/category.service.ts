@@ -33,7 +33,7 @@ export class CategoryService {
         }
         return {
           category_id: category.id,
-          category_name: category.name,
+          name: category.name,
           book_count: bookCount,
         };
       })

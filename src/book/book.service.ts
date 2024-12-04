@@ -127,6 +127,9 @@ export class BookService {
       books = await this.prisma.book.findMany({
         take: pageSize,
         skip,
+        orderBy: {
+          uploadedAt: 'desc',
+        },
       });
       // TODO:查询符合条件的总记录数
       totalCount = await this.prisma.book.count();
@@ -137,6 +140,9 @@ export class BookService {
       books = await this.prisma.book.findMany({
         take: pageSize,
         skip,
+        orderBy: {
+          uploadedAt: 'desc',
+        },
         where: {
           OR: [{ title: { contains: search } }],
         },
@@ -177,6 +183,9 @@ export class BookService {
           where: {
             id: { in: ids },
           },
+          orderBy: {
+            uploadedAt: 'desc',
+          },
         });
 
         // TODO:可能上架的书已被删除，可能出现bug
@@ -198,6 +207,9 @@ export class BookService {
           skip,
           where: {
             category_id: category_id.id,
+          },
+          orderBy: {
+            uploadedAt: 'desc',
           },
         });
         totalCount = await this.prisma.book.count({
@@ -251,6 +263,10 @@ export class BookService {
     if (!book) {
       throw new HttpException('Book not found', 400);
     }
+    // 获取书籍对应的分类名称
+    const category = await this.prisma.category.findUnique({
+      where: { id: book.category_id },
+    });
 
     // 查询该书籍的作者
     const authors = await this.prisma.$queryRaw`
@@ -259,9 +275,11 @@ export class BookService {
       JOIN book_author ba ON a.id = ba.author_id
       WHERE ba.book_id = ${id}
     `;
+    const { category_id, ...rest } = book;
 
     return {
-      ...book,
+      ...rest,
+      category,
       authors,
     };
   }
