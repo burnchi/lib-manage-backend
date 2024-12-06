@@ -60,4 +60,5 @@ model loan {
   loan_date     DateTime
   returned_date DateTime
   returned      Boolean
+  uploadedAt    DateTime @default(now())
 }
